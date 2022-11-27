@@ -37,13 +37,17 @@ export default {
     const hostname = 'waitlist.do'
     const { user, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
     if (rootPath && hostname == 'tailwind.do') return json({ api, gettingStarted, examples, user })
-    
+
     let body
     let mode = 'inline' // By default, we should add a style tag to the head.
   
     if (hostname != 'tailwind.do' && hostname != 'embeds.roled.org') {
       console.log('Running as origin', hostname)
       body = await fetch(req) // pass through to origin to get HTML.
+      
+      if (!body.headers.get('content-type').includes('text/html')) {
+        return body
+      }
     } else {
       if (!pathSegments[0].includes('.')) {
         // This is a theme segment
