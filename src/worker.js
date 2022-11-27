@@ -33,13 +33,12 @@ const theme = {
 
 export default {
   fetch: async (req, env) => {
-    const { user, hostname, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
-    if (rootPath) return json({ api, gettingStarted, examples, user })
+    const hostname = 'waitlist.do'
+    const { user, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
+    if (rootPath && hostname == 'tailwind.do') return json({ api, gettingStarted, examples, user })
     
     let body
     let mode = 'inline' // By default, we should add a style tag to the head.
-
-    console.log('MODE1', mode, hostname)
   
     if (hostname != 'tailwind.do' && hostname != 'embeds.roled.org') {
       console.log('Running as origin', hostname)
