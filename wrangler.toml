@@ -1,5 +1,5 @@
 name = "tailwind-do"
-route = { pattern = "*/*", zone_name = "tailwind.do" }
+#route = { pattern = "*/*", zone_name = "tailwind.do" }
 main = "dist/index.mjs"
 usage_model = "unbound"
 compatibility_date = "2022-09-23"
