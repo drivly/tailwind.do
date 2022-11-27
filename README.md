@@ -5,6 +5,10 @@ Generates CSS based on Tailwind classes used in your HTML, all without needing t
 ### Setting up
 All you need to do is send a request to our API with the URL you want us to scan, and we'll send back a already setup HTML doc with your classes inlined. You can also request a CSS file as well.
 
+Tailwind.do also supports headless mode, which will return your site's HTML with the classes inlined as if it was built natively. This is great for improving Lighthouse scores and development experience without needing to invest heavily into tooling. All you need to do is run this Worker infront of website and it will automagically detect and generate the needed CSS.
+
+![](https://nyc3.digitaloceanspaces.com/cerulean/screenshots/2022/11/firefox_LwtOlXVlIz.png)
+
 ### GET /:themeSettings/:mode/:url
 ### GET /:url
 This is the main route for Tailwind.do. All parameters are optional other than URL.
