@@ -32,10 +32,10 @@ const theme = {
 }
 
 export default {
-	fetch: async (req, env) => {
-	  const { user, hostname, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
-	  if (rootPath) return json({ api, gettingStarted, examples, user })
-	  
+  fetch: async (req, env) => {
+    const { user, hostname, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
+    if (rootPath) return json({ api, gettingStarted, examples, user })
+    
     let body
     let mode = 'inline' // By default, we should add a style tag to the head.
 
@@ -65,8 +65,6 @@ export default {
       } else {
         body = await fetch(`https://` + url)
       }
-
-      
     }
 
     const sheet = virtualSheet()
@@ -90,7 +88,7 @@ export default {
     })
 
     await new HTMLRewriter()
-      .on("*", new StyleExtractor(tw))
+      .on("*", { element: elm => tw(Object.fromEntries(elm.attributes).class) })
       .transform(body.clone())
       .text()
 
@@ -112,19 +110,8 @@ export default {
     }
 
     console.log(mode)
-	  
-	  return json({ api, data, user })
-	}
-}
-
-class StyleExtractor {
-  constructor(tw) {
-    this.tw = tw
-  }
-
-  element(e) {
-    const classes = Object.fromEntries(e.attributes).class
-    this.tw(classes)
+    
+    return json({ api, data, user })
   }
 }
   
