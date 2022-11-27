@@ -1,5 +1,6 @@
 import { create } from "twind"
 import { virtualSheet, getStyleTag } from "twind/sheets"
+import * as colors from 'twind/colors'
 
 export const api = {
   icon: '🚀',
@@ -78,6 +79,7 @@ export default {
           fontFamily: {
             sans: `'${ theme.font }', sans-serif`,
           },
+          colors,
         }
       },
       preflight: {
