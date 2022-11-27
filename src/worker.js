@@ -40,6 +40,7 @@ export default {
     let mode = 'inline' // By default, we should add a style tag to the head.
 
     if (hostname != 'tailwind.do' && hostname != 'embeds.roled.org') {
+      console.log('Running as origin', hostname)
       body = await fetch(req) // pass through to origin to get HTML.
     } else {
       if (!pathSegments[0].includes('.')) {
