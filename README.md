@@ -1,59 +1,20 @@
-# worker.templates.do - Templates
+# ⛅ Tailwind.do - Tailwind-on-demand
 
-## Getting Started
+Generates CSS based on Tailwind classes used in your HTML, all without needing to setup a build step.
 
-If you don't already have a browser extension to pretty-print JSON and make links clickable, start by installing that: <https://extensions.do>
+### Setting up
+All you need to do is send a request to our API with the URL you want us to scan, and we'll send back a already setup HTML doc with your classes inlined. You can also request a CSS file as well.
 
-Then interactively use the API at: <https://templates.do/api>
+### GET /:themeSettings/:mode/:url
+### GET /:url
+This is the main route for Tailwind.do. All parameters are optional other than URL.
 
-```json
-{
-  "api": {
-    "icon": "🚀",
-    "name": "templates.do",
-    "description": "Cloudflare Worker Template",
-    "url": "https://templates.do/api",
-    "type": "https://apis.do/templates",
-    "endpoints": {
-      "listCategories": "https://templates.do/api",
-      "getCategory": "https://templates.do/:type"
-    },
-    "site": "https://templates.do",
-    "login": "https://templates.do/login",
-    "signup": "https://templates.do/signup",
-    "subscribe": "https://templates.do/subscribe",
-    "repo": "https://github.com/drivly/templates.do"
-  },
-  "gettingStarted": [
-    "If you don't already have a JSON Viewer Browser Extension, get that first:",
-    "https://extensions.do"
-  ],
-  "examples": {
-    "listItems": "https://templates.do/worker"
-  },
-  "user": {
-    "authenticated": false,
-    "plan": "🛠 Build",
-    "browser": "Safari",
-    "os": "Mac OS",
-    "ip": "2606:54c0:76a0:1d18::e:fe",
-    "isp": "iCloud Private Relay",
-    "flag": "🇺🇸",
-    "zipcode": "94088",
-    "city": "Sunnyvale",
-    "metro": "San Francisco-Oak-San Jose",
-    "region": "California",
-    "country": "United States",
-    "continent": "North America",
-    "requestId": "751b42735f76e206-ORD",
-    "localTime": "9/28/2022, 1:55:20 AM",
-    "timezone": "America/Los_Angeles",
-    "edgeLocation": "Chicago",
-    "edgeDistanceMiles": 1833,
-    "recentInteractions": 10
-  }
-}
-```
+##### Parameters
+- `themeSettings` - A comma-separated list of theme settings to use. Right now, you can only change `font` to be anything Google Fonts supports. This will change the font used by Tailwind. For example, `font=Roboto` will use Roboto as the font.
+
+- `mode` - The mode to use. This can be either `css` or `inline` (default).
+
+- `url` - The URL to scan for Tailwind classes. Must be a valid URL without the prefix `http://` or `https://`. For example, `tailwind.do/inline/tailwindcss.com/docs/installation` will scan the page, and inline the Tailwind classes generated. Change `inline` to `css` to get a CSS file instead.
 
 ## [Drivly Open](https://driv.ly/open) - [Accelerating Innovation through Open Source](https://blog.driv.ly/accelerating-innovation-through-open-source)
 
