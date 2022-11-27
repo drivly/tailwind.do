@@ -17,7 +17,7 @@ format = "modules"
 
 [miniflare]
 durable_objects_persist = "./data/"  
-kv_persist = "./data/"
+kv_persist = "./data/" 
 
 [miniflare.mounts]
 ctx-do = "../ctx.do"
