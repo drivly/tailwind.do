@@ -1,6 +1,6 @@
-import { create } from "twind"
-import { virtualSheet, getStyleTag } from "twind/sheets"
-import * as colors from 'twind/colors'
+import { create } from 'twind'
+import { virtualSheet, getStyleTag } from 'twind/sheets'
+import colors from 'tailwindcss/colors'
 
 export const api = {
   icon: '🚀',
@@ -34,8 +34,7 @@ const theme = {
 
 export default {
   fetch: async (req, env) => {
-    const hostname = 'waitlist.do'
-    const { user, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
+    const { user, hostname, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
     if (rootPath && hostname == 'tailwind.do') return json({ api, gettingStarted, examples, user })
 
     let body

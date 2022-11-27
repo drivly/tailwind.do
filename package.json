@@ -21,6 +21,7 @@
   "homepage": "https://github.com/drivly/tailwind.do#readme",
   "dependencies": {
     "esbuild": "^0.15.16",
+    "tailwindcss": "^3.2.4",
     "twind": "^0.16.18"
   }
 }
