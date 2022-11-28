@@ -1,6 +1,6 @@
 # ⛅ Tailwind.do - Tailwind-on-demand
 
-Generates CSS based on Tailwind classes used in your HTML, all without needing to setup a build step.
+Generates CSS based on Tailwind classes used in your HTML, all without needing to setup a build step. Using Twind, this Worker has feature parity with Tailwind 3.0, giving you the full power of Tailwind without the bloat.
 
 ### Setting up
 All you need to do is send a request to our API with the URL you want us to scan, and we'll send back a already setup HTML doc with your classes inlined. You can also request a CSS file as well.
