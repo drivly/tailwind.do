@@ -48,7 +48,7 @@ export default {
         console.log('Running as origin', hostname)
         body = await fetch(req) // pass through to origin to get HTML.
         
-        if (!body.headers.get('content-type').includes('text/html')) {
+        if (!(body.headers.get('content-type') || '').includes('text/html')) {
           return body
         }
 
