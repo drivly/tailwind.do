@@ -20,6 +20,27 @@ This is the main route for Tailwind.do. All parameters are optional other than U
 
 - `url` - The URL to scan for Tailwind classes. Must be a valid URL without the prefix `http://` or `https://`. For example, `tailwind.do/inline/tailwindcss.com/docs/installation` will scan the page, and inline the Tailwind classes generated. Change `inline` to `css` to get a CSS file instead.
 
+##### Example
+
+```js
+// Inline mode
+return await fetch('https://tailwind.do/inline/tailwindcss.com/docs/installation')
+```
+
+
+### POST /:mode
+If you wish to embed this within another Worker, you can just send a POST request with the body being the HTML you wish to generate CSS for. If the mode is `inline`, you must include a `<head>` element for the CSS to be injected into. If the mode is `css`, you will get a CSS file back with the correct headers set.
+
+##### Example
+```js
+const res = await fetch('https://tailwind.do/inline', {
+  method: 'POST',
+  body: '<head></head> <h1 class="text-2xl">Hello World</h1>'
+})
+
+return res // Return your response as normal.
+```
+
 ## [Drivly Open](https://driv.ly/open) - [Accelerating Innovation through Open Source](https://blog.driv.ly/accelerating-innovation-through-open-source)
 
 Our [Drivly Open Philosophy](https://philosophy.do) has these key principles:
