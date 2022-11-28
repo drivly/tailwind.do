@@ -1,5 +1,5 @@
-import { create } from 'twind'
-import { virtualSheet, getStyleTag } from 'twind/sheets'
+import { twind, virtual, extract } from '@twind/core'
+import presetTailwind from '@twind/preset-tailwind'
 import colors from 'tailwindcss/colors'
 
 export const api = {
@@ -34,86 +34,163 @@ const theme = {
 
 export default {
   fetch: async (req, env) => {
-    const { user, hostname, pathname, rootPath, pathSegments, query } = await env.CTX.fetch(req).then(res => res.json())
+    const { user, hostname, pathname, rootPath, pathSegments, query, method } = await env.CTX.fetch(req.clone()).then(res => res.json())
     if (rootPath && hostname == 'tailwind.do') return json({ api, gettingStarted, examples, user })
 
     let body
     let mode = 'inline' // By default, we should add a style tag to the head.
-  
-    if (hostname != 'tailwind.do' && hostname != 'embeds.roled.org') {
-      console.log('Running as origin', hostname)
-      body = await fetch(req) // pass through to origin to get HTML.
-      
-      if (!body.headers.get('content-type').includes('text/html')) {
-        return body
-      }
-    } else {
-      if (!pathSegments[0].includes('.')) {
-        // This is a theme segment
-        // In format of key=value,key=value
-        for (const themeSegment of pathSegments.shift().split(',')) {
-          const [key, value] = themeSegment.split('=')
-          theme[key] = value
-        }
-      }
+    const fetch_start = Date.now()
+    let cache_key
 
+    if (method == 'GET') {
+  
+      if (hostname != 'tailwind.do' && hostname != 'embeds.roled.org') {
+        console.log('Running as origin', hostname)
+        body = await fetch(req) // pass through to origin to get HTML.
+        
+        if (!body.headers.get('content-type').includes('text/html')) {
+          return body
+        }
+
+        cache_key = `https://tailwind.do/${hostname}${pathname}`
+      } else {
+        if (!pathSegments[0].includes('.')) {
+          // This is a theme segment
+          // In format of key=value,key=value
+          for (const themeSegment of pathSegments.shift().split(',')) {
+            const [key, value] = themeSegment.split('=')
+            theme[key] = value
+          }
+        }
+
+        // Get the mode from the path.
+        if (['css', 'inline'].includes(pathSegments[0])) {
+          mode = pathSegments.shift()
+        }
+
+        let url = pathSegments.join('/')
+
+        body = await fetch(`https://` + url)
+
+        cache_key = `https://tailwind.do/${url}`
+      }
+    } else if (method == 'POST') {
       // Get the mode from the path.
       if (['css', 'inline'].includes(pathSegments[0])) {
         mode = pathSegments.shift()
       }
 
-      let url = pathSegments.join('/')
+      body = await req.text()
+      
+      const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body))
 
-      if (!url.includes('.')) {
-        // This URL is a Base64 encoded HTML doc.
-        url = atob(url)
-        body = new Response(url, { headers: { 'content-type': 'text/html; charset=utf-8' }})
-      } else {
-        body = await fetch(`https://` + url)
-      }
+      // Turn hash into a readable format
+      console.log(Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join(''))
+
+      cache_key = `https://tailwind.do/${Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')}`
+
+      body = new Response(body, { headers: { 'content-type': 'text/html; charset=utf-8' }})
     }
 
-    const sheet = virtualSheet()
+    const fetch_ms = Date.now() - fetch_start
 
-    const { tw } = create({
-      sheet,
-      'theme': {
-        extend: {
-          fontFamily: {
-            sans: `'${ theme.font }', sans-serif`,
+    const processing_start = Date.now()
+
+    // Race both the body + css extraction AND a cache fetch.
+    // But we're only interested in if either is successful.
+    // So we need to race, but only for resolved promises, ignoring rejected ones.
+    const race = [
+      new Promise(async res => {
+        const tw = twind(
+          {
+            'theme': {
+              extend: {
+                fontFamily: {
+                  sans: `'${ theme.font }', sans-serif`,
+                },
+                colors,
+              }
+            },
+            hash: false,
+            darkMode: 'class',
+            mode: 'silent',
+            presets: [presetTailwind({})]
           },
-          colors,
+          virtual()
+        )
+    
+        const { html, css } = extract(await (body.clone()).text(), tw)
+
+        res({
+          from: 'tw',
+          html,
+          css
+        })
+      }),
+      new Promise(async (res, rej) => {
+        const cache = caches.default
+
+        const resp = await cache.match(cache_key)
+
+        if (!resp) {
+          console.log('Cache miss')
+          return rej()
         }
-      },
-      preflight: {
-        // Import our font from Google Fonts.
-        '@import': `url('https://fonts.googleapis.com/css?family=${theme.font}:200,400,500,600,700&subset=cyrillic&display=swap')`,
-      },
-      hash: false,
-      darkMode: 'class',
-      mode: 'silent'
-    })
 
-    await new HTMLRewriter()
-      .on("*", { element: elm => tw(Object.fromEntries(elm.attributes).class) })
-      .transform(body.clone())
-      .text()
+        const { html, css } = await resp.json()
 
-    const style = getStyleTag(sheet)
+        res({
+          from: 'cache',
+          html,
+          css,
+        })
+      })
+    ]
+
+    const { from, html, css } = await Promise.any(race)
+
+    await new Promise(r => setTimeout(r, 5))
+
+    console.log(
+      `Processing took ${(Date.now() - processing_start)}ms`,
+    )
+
+    const processing_ms = Date.now() - processing_start
+
+    if (from == 'tw') {
+      const cache = caches.default
+
+      const r = new Response(JSON.stringify({ html, css }))
+
+      r.headers.set('Cache-Control', 'max-age=31536000')
+
+      await cache.put(cache_key, r)
+    }
 
     if (mode === 'css') {
       // remove the <style> tag from the style
-      const css = style.replace(/<style.*?>|<\/style>/g, '')
-
       return new Response(css, {
         headers: {
-          'Content-Type': 'text/css'
+          'Content-Type': 'text/css',
+          'TW-Fetch-Time': `${fetch_ms}ms`,
+          'TW-Processing-Time': `${processing_ms}ms`,
+          'TW-Served-From': from,
         }
       })
     } else if (mode === 'inline') {
+      const edited_response = new Response(body.body, body)
+
+      edited_response.headers.set('Content-Type', 'text/html')
+      edited_response.headers.set('TW-Fetch-Time', `${fetch_ms}ms`)
+      edited_response.headers.set('TW-Processing-Time', `${processing_ms}ms`)
+      edited_response.headers.set('TW-Served-From', from)
+
+      // Do some basic minification on the CSS file
+      const minified_css = css.replace(/\s+/g, ' ').replace(/\/\*.*?\*\//g, '')
+
       return new HTMLRewriter()
-        .on('head', { element: head => head.append(style, { html: true }) })
-        .transform(body.clone())
+        .on('head', { element: head => head.append(`<style id="tailwind.do">${minified_css}</style>`, { html: true }) })
+        .transform(edited_response)
     }
 
     console.log(mode)
