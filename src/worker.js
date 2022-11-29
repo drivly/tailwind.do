@@ -1,6 +1,9 @@
 import { twind, virtual, extract } from '@twind/core'
 import presetTailwind from '@twind/preset-tailwind'
 import colors from 'tailwindcss/colors'
+import presetTypography from '@twind/preset-typography'
+import presetTailwindForms from '@twind/preset-tailwind-forms'
+import presetLineClamp from '@twind/preset-line-clamp'
 
 export const api = {
   icon: '🚀',
@@ -41,6 +44,8 @@ export default {
     let mode = 'inline' // By default, we should add a style tag to the head.
     const fetch_start = Date.now()
     let cache_key
+
+    console.log('pathSegments', pathSegments)
 
     if (method == 'GET') {
   
@@ -114,7 +119,12 @@ export default {
             hash: false,
             darkMode: 'class',
             mode: 'silent',
-            presets: [presetTailwind({})]
+            presets: [
+              presetTailwind({}),
+              presetTailwindForms(),
+              presetLineClamp(),
+              presetTypography()
+            ]
           },
           virtual()
         )
@@ -144,7 +154,8 @@ export default {
           html,
           css,
         })
-      })
+      }),
+      new Promise(r => setTimeout(() => r({ from: 'timeout', html: '', css: '' }), 2000)) // 2 second timeout
     ]
 
     const { from, html, css } = await Promise.any(race)
@@ -156,6 +167,10 @@ export default {
     )
 
     const processing_ms = Date.now() - processing_start
+
+    if (from === 'timeout') {
+      return new Response('Timeout', { status: 504 })
+    }
 
     if (from == 'tw') {
       const cache = caches.default
@@ -189,7 +204,7 @@ export default {
       const minified_css = css.replace(/\s+/g, ' ').replace(/\/\*.*?\*\//g, '')
 
       return new HTMLRewriter()
-        .on('head', { element: head => head.append(`<style id="tailwind.do">${minified_css}</style>`, { html: true }) })
+        .on('head', { element: head => head.append(`<style id="tailwind.do" created-at="${new Date().toISOString()}" generation-time="${processing_ms}">${minified_css}</style>`, { html: true }) })
         .transform(edited_response)
     }
 
